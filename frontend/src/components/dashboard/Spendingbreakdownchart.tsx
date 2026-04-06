@@ -6,7 +6,6 @@ import {
   Pie,
   Cell,
   Tooltip,
-  TooltipProps,
 } from 'recharts';
 import { CategoryData } from '../../types';
 
@@ -14,15 +13,21 @@ interface SpendingBreakdownChartProps {
   data: CategoryData[];
 }
 
-// ─── Custom Tooltip ──────────────────────────────────────────────────────────
-const CustomTooltip: React.FC<TooltipProps<number, string>> = ({
-  active,
-  payload,
-}) => {
+// ─── Custom tooltip payload shape ─────────────────────────────────────────────
+interface TooltipPayloadItem {
+  payload: CategoryData;
+}
+
+interface CustomTooltipProps {
+  active?: boolean;
+  payload?: TooltipPayloadItem[];
+}
+
+// ─── Custom Tooltip ───────────────────────────────────────────────────────────
+const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload }) => {
   if (!active || !payload || payload.length === 0) return null;
 
-  const entry = payload[0];
-  const item = entry.payload as CategoryData;
+  const item = payload[0].payload;
 
   return (
     <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg px-4 py-3 text-sm">
@@ -45,7 +50,7 @@ const CustomTooltip: React.FC<TooltipProps<number, string>> = ({
   );
 };
 
-// ─── Legend Item ─────────────────────────────────────────────────────────────
+// ─── Legend Item ──────────────────────────────────────────────────────────────
 interface LegendItemProps {
   item: CategoryData;
   isActive: boolean;
@@ -81,7 +86,7 @@ const LegendItem: React.FC<LegendItemProps> = ({ item, isActive, onHover }) => (
   </motion.div>
 );
 
-// ─── Empty State ─────────────────────────────────────────────────────────────
+// ─── Empty State ──────────────────────────────────────────────────────────────
 const EmptyState: React.FC = () => (
   <div className="flex flex-col items-center justify-center h-48 gap-2">
     <p className="text-gray-400 dark:text-gray-600 text-sm">No spending data available</p>
@@ -91,13 +96,12 @@ const EmptyState: React.FC = () => (
   </div>
 );
 
-// ─── SpendingBreakdownChart ──────────────────────────────────────────────────
+// ─── SpendingBreakdownChart ───────────────────────────────────────────────────
 const SpendingBreakdownChart: React.FC<SpendingBreakdownChartProps> = ({ data }) => {
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
 
   const total = data.reduce((sum, item) => sum + item.amount, 0);
 
-  // Find active index for Pie highlight
   const activeIndex = activeCategory
     ? data.findIndex((d) => d.category === activeCategory)
     : -1;

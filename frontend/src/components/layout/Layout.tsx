@@ -3,25 +3,23 @@ import Sidebar, { Page } from './Sidebar';
 import Header, { Role } from './Header';
 
 interface LayoutProps {
-  children: (activePage: Page, role: Role) => React.ReactNode;
+  role: Role;
+  onRoleChange: (role: Role) => void;
+  children: (activePage: Page) => React.ReactNode;
 }
 
-const Layout: React.FC<LayoutProps> = ({ children }) => {
+const Layout: React.FC<LayoutProps> = ({ role, onRoleChange, children }) => {
   const [activePage, setActivePage] = useState<Page>('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
   const [darkMode, setDarkMode] = useState<boolean>(false);
-  const [role, setRole] = useState<Role>('viewer');
 
-  // ── Persist dark mode & role to localStorage ─────────────────────────────
+  // ── Persist dark mode to localStorage ────────────────────────────────────
   useEffect(() => {
     const savedDark = localStorage.getItem('fintrack_dark');
-    const savedRole = localStorage.getItem('fintrack_role') as Role | null;
-
     if (savedDark === 'true') setDarkMode(true);
-    if (savedRole === 'admin' || savedRole === 'viewer') setRole(savedRole);
   }, []);
 
-  // ── Apply / remove the Tailwind `dark` class on <html> ───────────────────
+  // ── Apply / remove `dark` class on <html> ────────────────────────────────
   useEffect(() => {
     const root = document.documentElement;
     if (darkMode) {
@@ -32,12 +30,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     localStorage.setItem('fintrack_dark', String(darkMode));
   }, [darkMode]);
 
-  // ── Persist role ─────────────────────────────────────────────────────────
-  useEffect(() => {
-    localStorage.setItem('fintrack_role', role);
-  }, [role]);
-
-  // ── Close sidebar when screen grows to lg ────────────────────────────────
+  // ── Close sidebar when resizing to desktop ────────────────────────────────
   useEffect(() => {
     const mql = window.matchMedia('(min-width: 1024px)');
     const handleChange = (e: MediaQueryListEvent) => {
@@ -49,10 +42,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   const handleToggleDark = useCallback(() => {
     setDarkMode((prev) => !prev);
-  }, []);
-
-  const handleRoleChange = useCallback((newRole: Role) => {
-    setRole(newRole);
   }, []);
 
   const handleNavigate = useCallback((page: Page) => {
@@ -83,7 +72,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         <Header
           activePage={activePage}
           role={role}
-          onRoleChange={handleRoleChange}
+          onRoleChange={onRoleChange}
           darkMode={darkMode}
           onToggleDark={handleToggleDark}
           onMenuClick={handleMenuClick}
@@ -91,7 +80,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
         {/* Page content */}
         <main className="flex-1 overflow-y-auto px-4 sm:px-6 py-6">
-          {children(activePage, role)}
+          {children(activePage)}
         </main>
       </div>
     </div>

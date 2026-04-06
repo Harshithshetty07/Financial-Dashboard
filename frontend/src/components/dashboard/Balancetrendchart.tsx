@@ -9,7 +9,6 @@ import {
   CartesianGrid,
   Tooltip,
   Legend,
-  TooltipProps,
 } from 'recharts';
 import { MonthlyData } from '../../types';
 
@@ -18,12 +17,21 @@ interface BalanceTrendChartProps {
   darkMode: boolean;
 }
 
-// ─── Custom Tooltip ──────────────────────────────────────────────────────────
-const CustomTooltip: React.FC<TooltipProps<number, string>> = ({
-  active,
-  payload,
-  label,
-}) => {
+// ─── Custom tooltip payload shape ─────────────────────────────────────────────
+interface TooltipPayloadItem {
+  name: string;
+  value: number;
+  color: string;
+}
+
+interface CustomTooltipProps {
+  active?: boolean;
+  payload?: TooltipPayloadItem[];
+  label?: string;
+}
+
+// ─── Custom Tooltip ───────────────────────────────────────────────────────────
+const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload, label }) => {
   if (!active || !payload || payload.length === 0) return null;
 
   return (
@@ -45,17 +53,18 @@ const CustomTooltip: React.FC<TooltipProps<number, string>> = ({
   );
 };
 
-// ─── Empty State ─────────────────────────────────────────────────────────────
+// ─── Empty State ──────────────────────────────────────────────────────────────
 const EmptyState: React.FC = () => (
   <div className="flex flex-col items-center justify-center h-48 gap-2">
     <p className="text-gray-400 dark:text-gray-600 text-sm">No trend data available</p>
-    <p className="text-gray-300 dark:text-gray-700 text-xs">Add transactions to see your balance trend</p>
+    <p className="text-gray-300 dark:text-gray-700 text-xs">
+      Add transactions to see your balance trend
+    </p>
   </div>
 );
 
-// ─── BalanceTrendChart ───────────────────────────────────────────────────────
+// ─── BalanceTrendChart ────────────────────────────────────────────────────────
 const BalanceTrendChart: React.FC<BalanceTrendChartProps> = ({ data, darkMode }) => {
-  // Theme-aware colors
   const axisColor = darkMode ? '#6b7280' : '#9ca3af';
   const gridColor = darkMode ? '#1f2937' : '#f3f4f6';
 

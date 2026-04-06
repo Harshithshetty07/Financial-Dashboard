@@ -8,7 +8,6 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  TooltipProps,
   Legend,
 } from 'recharts';
 import {
@@ -49,7 +48,8 @@ const deriveInsights = (transactions: Transaction[]) => {
 
   const totalExpenses = expenses.reduce((s, t) => s + t.amount, 0);
   const totalIncome = income.reduce((s, t) => s + t.amount, 0);
-  const savingsRate = totalIncome > 0 ? ((totalIncome - totalExpenses) / totalIncome) * 100 : 0;
+  const savingsRate =
+    totalIncome > 0 ? ((totalIncome - totalExpenses) / totalIncome) * 100 : 0;
 
   // Top spending category
   const categoryTotals: Record<string, number> = {};
@@ -67,31 +67,40 @@ const deriveInsights = (transactions: Transaction[]) => {
   // Average expense
   const avgExpense = expenses.length > 0 ? totalExpenses / expenses.length : 0;
 
-  // Current vs previous month comparison
+  // Current vs previous month
   const now = new Date();
   const currMonth = now.getMonth();
   const currYear = now.getFullYear();
-
   const prevDate = new Date(currYear, currMonth - 1, 1);
   const prevMonth = prevDate.getMonth();
   const prevYear = prevDate.getFullYear();
 
-  const isCurrentMonth = (t: Transaction) => {
+  const isCurrentMonth = (t: Transaction): boolean => {
     const d = new Date(t.date);
     return d.getMonth() === currMonth && d.getFullYear() === currYear;
   };
-  const isPrevMonth = (t: Transaction) => {
+  const isPrevMonth = (t: Transaction): boolean => {
     const d = new Date(t.date);
     return d.getMonth() === prevMonth && d.getFullYear() === prevYear;
   };
 
-  const currExpenses = expenses.filter(isCurrentMonth).reduce((s, t) => s + t.amount, 0);
-  const prevExpenses = expenses.filter(isPrevMonth).reduce((s, t) => s + t.amount, 0);
-  const currIncome = income.filter(isCurrentMonth).reduce((s, t) => s + t.amount, 0);
-  const prevIncome = income.filter(isPrevMonth).reduce((s, t) => s + t.amount, 0);
+  const currExpenses = expenses
+    .filter(isCurrentMonth)
+    .reduce((s, t) => s + t.amount, 0);
+  const prevExpenses = expenses
+    .filter(isPrevMonth)
+    .reduce((s, t) => s + t.amount, 0);
+  const currIncome = income
+    .filter(isCurrentMonth)
+    .reduce((s, t) => s + t.amount, 0);
+  const prevIncome = income
+    .filter(isPrevMonth)
+    .reduce((s, t) => s + t.amount, 0);
 
   const expenseChange =
-    prevExpenses > 0 ? ((currExpenses - prevExpenses) / prevExpenses) * 100 : null;
+    prevExpenses > 0
+      ? ((currExpenses - prevExpenses) / prevExpenses) * 100
+      : null;
   const incomeChange =
     prevIncome > 0 ? ((currIncome - prevIncome) / prevIncome) * 100 : null;
 
@@ -99,7 +108,9 @@ const deriveInsights = (transactions: Transaction[]) => {
     totalIncome,
     totalExpenses,
     savingsRate,
-    topCategory: topCategory ? { name: topCategory[0], amount: topCategory[1] } : null,
+    topCategory: topCategory
+      ? { name: topCategory[0], amount: topCategory[1] }
+      : null,
     largestExpense,
     avgExpense,
     currExpenses,
@@ -166,16 +177,35 @@ const InsightCard: React.FC<InsightCardProps> = ({
   </motion.div>
 );
 
+// ─── Monthly Tooltip custom interface ─────────────────────────────────────────
+interface TooltipPayloadItem {
+  name: string;
+  value: number;
+  color: string;
+}
+
+interface MonthlyTooltipProps {
+  active?: boolean;
+  payload?: TooltipPayloadItem[];
+  label?: string;
+}
+
 // ─── Monthly comparison tooltip ───────────────────────────────────────────────
-const MonthlyTooltip: React.FC<TooltipProps<number, string>> = ({ active, payload, label }) => {
+const MonthlyTooltip: React.FC<MonthlyTooltipProps> = ({ active, payload, label }) => {
   if (!active || !payload || payload.length === 0) return null;
+
   return (
     <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg px-4 py-3 text-sm">
       <p className="font-semibold text-gray-700 dark:text-gray-200 mb-2">{label}</p>
       {payload.map((entry) => (
         <div key={entry.name} className="flex items-center gap-2 mb-1">
-          <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: entry.color }} />
-          <span className="text-gray-500 dark:text-gray-400 capitalize">{entry.name}:</span>
+          <span
+            className="w-2.5 h-2.5 rounded-full"
+            style={{ backgroundColor: entry.color }}
+          />
+          <span className="text-gray-500 dark:text-gray-400 capitalize">
+            {entry.name}:
+          </span>
           <span className="font-medium text-gray-800 dark:text-gray-100">
             ₹{Number(entry.value).toLocaleString('en-IN')}
           </span>
@@ -210,7 +240,6 @@ const InsightsPanel: React.FC<InsightsPanelProps> = ({
   const axisColor = darkMode ? '#6b7280' : '#9ca3af';
   const gridColor = darkMode ? '#1f2937' : '#f3f4f6';
 
-  // Monthly comparison data (last 2 months)
   const comparisonData = monthlyData.slice(-6);
 
   return (
@@ -222,7 +251,11 @@ const InsightsPanel: React.FC<InsightsPanelProps> = ({
           index={0}
           title="Top Spending Category"
           value={ins.topCategory ? ins.topCategory.name : '—'}
-          subtitle={ins.topCategory ? `${formatAmount(ins.topCategory.amount)} spent` : undefined}
+          subtitle={
+            ins.topCategory
+              ? `${formatAmount(ins.topCategory.amount)} spent`
+              : undefined
+          }
           icon={Award}
           iconBg="bg-amber-50 dark:bg-amber-900/20"
           iconColor="text-amber-600 dark:text-amber-400"
@@ -240,7 +273,10 @@ const InsightsPanel: React.FC<InsightsPanelProps> = ({
           iconColor="text-green-600 dark:text-green-400"
           badge={
             ins.savingsRate >= 0
-              ? { label: ins.savingsRate >= 20 ? 'Healthy' : 'Low', positive: ins.savingsRate >= 20 }
+              ? {
+                  label: ins.savingsRate >= 20 ? 'Healthy' : 'Low',
+                  positive: ins.savingsRate >= 20,
+                }
               : { label: 'Negative', positive: false }
           }
         />
@@ -257,7 +293,7 @@ const InsightsPanel: React.FC<InsightsPanelProps> = ({
           badge={null}
         />
 
-        {/* This month expenses vs last month */}
+        {/* Current month expenses */}
         <InsightCard
           index={3}
           title={`${getCurrentMonthName()} Expenses`}
@@ -269,14 +305,16 @@ const InsightsPanel: React.FC<InsightsPanelProps> = ({
           badge={
             ins.expenseChange !== null
               ? {
-                  label: `${Math.abs(ins.expenseChange).toFixed(1)}% ${ins.expenseChange > 0 ? 'more' : 'less'}`,
+                  label: `${Math.abs(ins.expenseChange).toFixed(1)}% ${
+                    ins.expenseChange > 0 ? 'more' : 'less'
+                  }`,
                   positive: ins.expenseChange <= 0,
                 }
               : null
           }
         />
 
-        {/* This month income vs last month */}
+        {/* Current month income */}
         <InsightCard
           index={4}
           title={`${getCurrentMonthName()} Income`}
@@ -288,7 +326,9 @@ const InsightsPanel: React.FC<InsightsPanelProps> = ({
           badge={
             ins.incomeChange !== null
               ? {
-                  label: `${Math.abs(ins.incomeChange).toFixed(1)}% ${ins.incomeChange > 0 ? 'more' : 'less'}`,
+                  label: `${Math.abs(ins.incomeChange).toFixed(1)}% ${
+                    ins.incomeChange > 0 ? 'more' : 'less'
+                  }`,
                   positive: ins.incomeChange >= 0,
                 }
               : null
@@ -331,7 +371,11 @@ const InsightsPanel: React.FC<InsightsPanelProps> = ({
               barCategoryGap="30%"
               barGap={4}
             >
-              <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} />
+              <CartesianGrid
+                strokeDasharray="3 3"
+                stroke={gridColor}
+                vertical={false}
+              />
               <XAxis
                 dataKey="month"
                 tick={{ fontSize: 11, fill: axisColor }}
@@ -353,8 +397,18 @@ const InsightsPanel: React.FC<InsightsPanelProps> = ({
                 iconSize={8}
                 wrapperStyle={{ fontSize: '12px', paddingTop: '16px' }}
               />
-              <Bar dataKey="income" name="Income" fill="#6366f1" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="expenses" name="Expenses" fill="#f43f5e" radius={[4, 4, 0, 0]} />
+              <Bar
+                dataKey="income"
+                name="Income"
+                fill="#6366f1"
+                radius={[4, 4, 0, 0]}
+              />
+              <Bar
+                dataKey="expenses"
+                name="Expenses"
+                fill="#f43f5e"
+                radius={[4, 4, 0, 0]}
+              />
             </BarChart>
           </ResponsiveContainer>
         </motion.div>
