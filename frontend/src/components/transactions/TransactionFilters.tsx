@@ -4,7 +4,6 @@ import {
   TransactionFilters as FiltersType,
   TransactionType,
   SortField,
-  SortOrder,
 } from '../../types';
 
 interface TransactionFiltersProps {
